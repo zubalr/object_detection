@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'api_service.dart';
 
@@ -14,10 +15,10 @@ class ApiServiceType {
       headers: {
         'Accept-Version': 'v1',
         // TODO: Add your Unsplash API key
-        'Authorization': 'Client-ID YOUR_API_KEY',
+        'Authorization': 'Client-ID ${dotenv.env['API_KEY'] ?? ''}',
       },
     ),
-  );
+  ); 
 
   static ApiService _getApiService({
     required BaseOptions options,
