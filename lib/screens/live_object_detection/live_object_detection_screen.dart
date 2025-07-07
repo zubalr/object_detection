@@ -10,8 +10,10 @@ import 'package:tensorflow_demo/models/screen_params.dart';
 import 'package:tensorflow_demo/screens/live_object_detection/widgets/rounded_button.dart';
 import 'package:tensorflow_demo/services/detector.dart';
 import 'package:tensorflow_demo/services/navigation_service.dart';
+import 'package:tensorflow_demo/utils/three_d_helper.dart';
 import 'package:tensorflow_demo/values/app_routes.dart';
 import 'package:tensorflow_demo/widgets/box_widget.dart';
+import 'package:tensorflow_demo/widgets/three_d_object_overlay.dart';
 
 class LiveObjectDetectionScreen extends StatefulWidget {
   const LiveObjectDetectionScreen({super.key});
@@ -46,6 +48,12 @@ class _LiveObjectDetectionScreenState extends State<LiveObjectDetectionScreen> {
   /// Results to draw bounding boxes
   List<DetectedObjectDm>? detectedObjectList;
 
+  /// 3D mode toggle
+  bool _is3DModeEnabled = true;
+
+  /// 3D configuration
+  ThreeDConfig _threeDConfig = const ThreeDConfig();
+
   @override
   void initState() {
     super.initState();
@@ -64,7 +72,23 @@ class _LiveObjectDetectionScreenState extends State<LiveObjectDetectionScreen> {
   Widget build(BuildContext context) {
     final controller = _cameraController;
     return Scaffold(
-      appBar: AppBar(title: const Text('Live Object Detection')),
+      appBar: AppBar(
+        title: const Text('Live Object Detection'),
+        actions: [
+          // 3D mode toggle
+          IconButton(
+            icon: Icon(_is3DModeEnabled ? Icons.view_in_ar : Icons.crop_free),
+            onPressed: _toggle3DMode,
+            tooltip: _is3DModeEnabled ? 'Switch to 2D' : 'Switch to 3D',
+          ),
+          // Settings button
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: _openSettings,
+            tooltip: '3D Settings',
+          ),
+        ],
+      ),
       body: controller == null || !controller.value.isInitialized
           ? Center(child: Text(message ?? 'Initializing...'))
           : Column(
@@ -75,13 +99,86 @@ class _LiveObjectDetectionScreenState extends State<LiveObjectDetectionScreen> {
                     fit: StackFit.expand,
                     children: [
                       CameraPreview(controller),
-                      // Bounding boxes
+                      // Object overlays (2D or 3D based on mode)
                       ...?detectedObjectList?.map(
                         (detectedObject) => Positioned.fromRect(
                           rect: detectedObject.renderLocation,
-                          child: BoxWidget.fromDetectedObject(detectedObject),
+                          child: _is3DModeEnabled
+                              ? ThreeDObjectOverlay(
+                                  detectedObject: detectedObject,
+                                  config: _threeDConfig,
+                                  onModelLoaded: () {
+                                    log('3D model loaded for ${detectedObject.label}');
+                                  },
+                                  onModelError: (error) {
+                                    log('3D model error for ${detectedObject.label}: $error');
+                                  },
+                                  onModelTap: () {
+                                    log('3D model tapped: ${detectedObject.label}');
+                                  },
+                                )
+                              : BoxWidget.fromDetectedObject(detectedObject),
                         ),
                       ),
+                      
+                      // Mode indicator
+                      Positioned(
+                        top: 8,
+                        left: 8,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.black54,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                _is3DModeEnabled ? Icons.view_in_ar : Icons.crop_free,
+                                color: Colors.white,
+                                size: 16,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                _is3DModeEnabled ? '3D Mode' : '2D Mode',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      
+                      // Performance indicator (when in 3D mode)
+                      if (_is3DModeEnabled && detectedObjectList != null)
+                        Positioned(
+                          top: 8,
+                          right: 8,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.black54,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              '3D Objects: ${detectedObjectList!.where((obj) => ThreeDHelper.shouldRender3D(obj)).length}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                              ),
+                            ),
+                          ),
+                        ),
                     ],
                   ),
                 ),
@@ -237,5 +334,16 @@ class _LiveObjectDetectionScreenState extends State<LiveObjectDetectionScreen> {
   /// Callback to receive each frame [CameraImage] perform inference on it
   void onLatestImageAvailable(CameraImage cameraImage) {
     _detector?.processFrame(cameraImage);
+  }
+
+  void _toggle3DMode() {
+    setState(() {
+      _is3DModeEnabled = !_is3DModeEnabled;
+    });
+    log('3D Mode ${_is3DModeEnabled ? 'enabled' : 'disabled'}');
+  }
+
+  void _openSettings() {
+    NavigationService.instance.pushNamed(AppRoutes.threeDSettingsScreen);
   }
 }

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:tensorflow_demo/models/screen_params.dart';
 import 'package:tensorflow_demo/services/navigation_service.dart';
 import 'package:tensorflow_demo/values/app_routes.dart';
+import 'package:tensorflow_demo/services/three_d_model_cache.dart';
 import 'package:tensorflow_demo/values/enumerations.dart';
 
 import 'home_screen_store.dart';
@@ -105,6 +106,47 @@ class HomeScreen extends StatelessWidget {
               ),
           };
         },
+      ),
+    );
+  }
+
+  Widget _buildCacheInfo() {
+    final cache = ThreeDModelCache();
+    final stats = cache.stats;
+    
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.memory, size: 16),
+                const SizedBox(width: 8),
+                const Text(
+                  '3D Model Cache',
+                  style: TextStyle(fontWeight: FontWeight.w500),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Cached: ${stats.totalEntries}'),
+                Text('Active: ${stats.activeModels}'),
+                Text('Errors: ${stats.errorEntries}'),
+              ],
+            ),
+            const SizedBox(height: 4),
+            LinearProgressIndicator(
+              value: stats.totalEntries / ThreeDModelCache.maxCacheSize,
+              backgroundColor: Colors.grey[300],
+            ),
+          ],
+        ),
       ),
     );
   }
