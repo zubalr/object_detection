@@ -196,7 +196,7 @@ class _ThreeDObjectOverlayState extends State<ThreeDObjectOverlay>
   Widget build(BuildContext context) {
     final rect = widget.detectedObject.renderLocation;
     
-    return Container(
+    return SizedBox(
       width: rect.width,
       height: rect.height,
       child: Stack(

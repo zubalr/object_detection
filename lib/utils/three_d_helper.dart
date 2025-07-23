@@ -60,7 +60,7 @@ class ThreeDHelper {
   /// Get animation duration based on object confidence (higher confidence = faster animation)
   static Duration getAnimationDuration(DetectedObjectDm detectedObject) {
     final confidence = detectedObject.score.clamp(0.0, 1.0);
-    final baseDuration = 2000; // 2 seconds base
+    const baseDuration = 2000; // 2 seconds base
     final adjustedDuration = (baseDuration * (2.0 - confidence)).round();
     
     return Duration(milliseconds: adjustedDuration.clamp(1000, 3000));

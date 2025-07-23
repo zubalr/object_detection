@@ -21,7 +21,7 @@ class _PhotoAnalyzedScreenState extends State<PhotoAnalyzedScreen> {
   Uint8List? image;
   List<DetectedObjectDm> detectedObjectList = [];
   bool _is3DModeEnabled = true;
-  ThreeDConfig _threeDConfig = const ThreeDConfig();
+  final ThreeDConfig _threeDConfig = const ThreeDConfig();
   final GlobalKey _imageKey = GlobalKey();
   Size? _imageSize;
 

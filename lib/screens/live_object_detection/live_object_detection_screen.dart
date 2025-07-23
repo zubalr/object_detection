@@ -52,7 +52,7 @@ class _LiveObjectDetectionScreenState extends State<LiveObjectDetectionScreen> {
   bool _is3DModeEnabled = true;
 
   /// 3D configuration
-  ThreeDConfig _threeDConfig = const ThreeDConfig();
+  final ThreeDConfig _threeDConfig = const ThreeDConfig();
 
   @override
   void initState() {
